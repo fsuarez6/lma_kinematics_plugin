@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <name>lma_kinematics_plugin</name>
+  <description>A implementation of kinematics as a plugin based on KDL ChainIkSolverPos_LMA.</description>
+  
+  <version>0.1.0</version>  
+  <author email="fsuarez6@gmail.com">Francisco Suarez-Ruiz</author>
+  <maintainer email="fsuarez6@gmail.com">Francisco Suarez-Ruiz</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">https://github.com/fsuarez6/lma_kinematics_plugin</url>
+  <url type="bugtracker">https://github.com/fsuarez6/lma_kinematics_plugin/issues</url>
+  <url type="repository">https://github.com/fsuarez6/lma_kinematics_plugin</url>
+
+  <buildtool_depend>catkin</buildtool_depend> 
+
+  <build_depend>moveit_core</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>cmake_modules</build_depend>
+
+  <run_depend>moveit_core</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>angles</run_depend>
+
+  <export>
+    <moveit_core plugin="${prefix}/lma_kinematics_plugin_description.xml"/>
+  </export>
+
+</package>
