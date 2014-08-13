@@ -3,11 +3,12 @@ project(lma_kinematics_plugin)
 
 find_package(Boost REQUIRED system filesystem date_time program_options signals thread)
 find_package(catkin REQUIRED COMPONENTS
-  moveit_core
-  cmake_modules
-  pluginlib
   actionlib
+  cmake_modules
   dynamic_reconfigure
+  moveit_core
+  pluginlib
+  tf_conversions
 )
 
 find_package(Eigen REQUIRED)
@@ -18,6 +19,7 @@ catkin_package(
   CATKIN_DEPENDS
     pluginlib
     moveit_core
+    tf_conversions
 )
 
 include_directories(include)
