@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   pluginlib
   tf_conversions
+  moveit_ros_planning
 )
 
 find_package(Eigen REQUIRED)
@@ -20,6 +21,7 @@ catkin_package(
     pluginlib
     moveit_core
     tf_conversions
+    moveit_ros_planning
 )
 
 include_directories(include)
