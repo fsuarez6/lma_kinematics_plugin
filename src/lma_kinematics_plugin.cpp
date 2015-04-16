@@ -50,6 +50,27 @@
 //register KDLKinematics as a KinematicsBase implementation
 CLASS_LOADER_REGISTER_CLASS(lma_kinematics_plugin::LMAKinematicsPlugin, kinematics::KinematicsBase)
 
+namespace
+{
+
+bool canSpecifyPosition(const robot_model::JointModel *jmodel, const unsigned int index)
+{
+  bool ok = false;
+  if (jmodel->getType() == robot_model::JointModel::PLANAR && index == 2)
+    ROS_ERROR("Cannot specify position limits for orientation of planar joint '%s'", jmodel->getName().c_str());
+  else
+  if (jmodel->getType() == robot_model::JointModel::FLOATING && index > 2)
+    ROS_ERROR("Cannot specify position limits for orientation of floating joint '%s'", jmodel->getName().c_str());
+  else
+  if (jmodel->getType() == robot_model::JointModel::REVOLUTE &&
+      static_cast<const robot_model::RevoluteJointModel*>(jmodel)->isContinuous())
+    ROS_ERROR("Cannot specify position limits for continuous joint '%s'", jmodel->getName().c_str());
+  else
+    ok = true;
+  return ok;
+}
+}
+
 namespace lma_kinematics_plugin
 {
 
@@ -131,6 +152,8 @@ bool LMAKinematicsPlugin::initialize(const std::string &robot_description,
                                      double search_discretization)
 {
   setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
+  
+  ROS_DEBUG_NAMED("lma","LMAKinematicsPlugin::initialize. robot_description:  %s", robot_description_.c_str()); 
 
   ros::NodeHandle private_handle("~");
   rdf_loader::RDFLoader rdf_loader(robot_description_);
@@ -158,6 +181,46 @@ bool LMAKinematicsPlugin::initialize(const std::string &robot_description,
   {
     ROS_ERROR_NAMED("lma","Group '%s' includes joints that have more than 1 DOF", group_name.c_str());
     return false;
+  }
+
+
+  if (robot_model_ && joint_model_group && !rdf_loader.getRobotDescription().empty())
+  {
+    // if there are additional joint limits specified in some .yaml file, read those in
+    ros::NodeHandle nh("~");
+
+    for (std::size_t i = 0; i < joint_model_group->getJointModels().size() ; ++i)
+    {
+      std::string joint_name = joint_model_group->getJointModelNames()[i];
+      robot_model::JointModel *jmodel = robot_model_->getJointModel(joint_name);
+      std::vector<moveit_msgs::JointLimits> jlim = jmodel->getVariableBoundsMsg();
+      for (std::size_t j = 0; j < jlim.size(); ++j)
+      {
+        std::string prefix = rdf_loader.getRobotDescription() + "_planning/joint_limits/" + jlim[j].joint_name + "/";
+
+        double max_position;
+        if (nh.getParam(prefix + "max_position", max_position))
+        {
+          if (canSpecifyPosition(jmodel, j))
+          {
+            jlim[j].has_position_limits = true;
+            jlim[j].max_position = max_position;
+            ROS_DEBUG_STREAM_NAMED("lma","lma joint_limits prefix: " << (prefix + "max_position") << " = " << max_position);
+          }
+        }
+        double min_position;
+        if (nh.getParam(prefix + "min_position", min_position))
+        {
+          if (canSpecifyPosition(jmodel, j))
+          {
+            jlim[j].has_position_limits = true;
+            jlim[j].min_position = min_position;
+            ROS_DEBUG_STREAM_NAMED("lma","lma joint_limits prefix: " << (prefix + "min_position") << " = " << min_position);
+          }
+        }
+      }
+      jmodel->setVariableBounds(jlim);
+    }
   }
 
   KDL::Tree kdl_tree;
